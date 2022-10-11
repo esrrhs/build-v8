@@ -45,4 +45,5 @@ jobs:
           
           tools/dev/gm.py x64.release.check
           
+          tree out/x64.release
           
