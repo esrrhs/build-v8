@@ -27,9 +27,6 @@ jobs:
 
       - name: Build
         run: |
-          VER=`curl https://v8.dev/blog/tags/release | grep -Eo "V8 release v[0-9.]*"  | sort -rn | head -n 1 | sed 's/V8 release v//g'`
-          echo $VER
-          
           git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
           export PATH=$(pwd)/depot_tools:$PATH
           gclient
@@ -46,4 +43,54 @@ jobs:
           tools/dev/gm.py x64.release.check
           
           tree out/x64.release
+          
+          mkdir -p ~/v8_result/lib
+          cp out/x64.release/obj/libwee8.a ~/v8_result/lib
+          cp include/ ~/v8_result -r
+          
+      - uses: actions/upload-artifact@v2
+        with:
+          name: v8_result
+          path: ~/v8_result
+          
+  publish:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/download-artifact@v1
+        with:
+          name: v8_result
+          path: v8_result/
+
+      - name: Create Release Asset
+        run: |
+          set -x
+          VER=`curl https://v8.dev/blog/tags/release | grep -Eo "V8 release v[0-9.]*"  | sort -rn | head -n 1 | sed 's/V8 release v//g'`
+          echo $VER
+          export VER=$VER
+          cd ~
+          tar cvfz v8_result_$VER.tgz v8_result
+          cd -
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: V8_$VER_${{ github.event.inputs.tag_date }}
+          release_name: V8_$VER_${{ github.event.inputs.tag_date }}
+          draft: false
+          prerelease: false
+
+      - name: Upload V8
+        #id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./v8_result_$VER.tgz
+          asset_name: v8_result_$VER.tgz
+          asset_content_type: application/tgz
           
