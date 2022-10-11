@@ -48,30 +48,17 @@ jobs:
           cp out/x64.release/obj/libwee8.a ~/v8_result/lib
           cp include/ ~/v8_result -r
           
+          VER=`curl https://v8.dev/blog/tags/release | grep -Eo "V8 release v[0-9.]*"  | sort -rn | head -n 1 | sed 's/V8 release v//g'`
+          echo $VER
+          export VER=$VER
+          
+          tar cvfz ~/v8_result_$VER.tgz ~/v8_result
+          
       - uses: actions/upload-artifact@v2
         with:
           name: v8_result
           path: ~/v8_result
           
-  publish:
-    runs-on: ubuntu-latest
-    needs: [build]
-    steps:
-      - uses: actions/download-artifact@v1
-        with:
-          name: v8_result
-          path: v8_result/
-
-      - name: Create Release Asset
-        run: |
-          set -x
-          VER=`curl https://v8.dev/blog/tags/release | grep -Eo "V8 release v[0-9.]*"  | sort -rn | head -n 1 | sed 's/V8 release v//g'`
-          echo $VER
-          export VER=$VER
-          cd ~
-          tar cvfz v8_result_$VER.tgz v8_result
-          cd -
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
