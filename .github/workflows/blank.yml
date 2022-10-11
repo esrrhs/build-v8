@@ -41,3 +41,5 @@ jobs:
           
           gclient sync
           
+          ./build/install-build-deps.sh
+          
