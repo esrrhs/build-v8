@@ -34,4 +34,10 @@ jobs:
           export PATH=$(pwd)/depot_tools:$PATH
           gclient
           
+          mkdir ~/v8
+          cd ~/v8
+          fetch v8
+          cd v8
+          
+          gclient sync
           
