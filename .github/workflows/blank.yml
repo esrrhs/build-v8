@@ -43,3 +43,6 @@ jobs:
           
           ./build/install-build-deps.sh
           
+          tools/dev/gm.py x64.release.check
+          
+          
